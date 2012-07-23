@@ -1,10 +1,13 @@
 import copy
 import evaluationTools
-import matplotlib.pyplot as plt
+import math
 import pickle
 import Queue
+import random
 import sys
 import time
+
+import matplotlib.pyplot as plt
 
 from containers.Bipartite import Bipartite
 from containers.Cluster import Cluster
@@ -16,11 +19,12 @@ from Population import Population
 from SJGlobals import SJGlobals
 
 class SibJoin:
-    def __init__(self, filetype, fn=None, pop=None):
+    def __init__(self, filetype, fn=None, pop=None, scoreSensitivity=2.0):
         if (fn != None and pop != None) or (fn == None and pop == None):
             print("Error: Expected exactly one of (fn, pop) to be None")
 
         self.fn = fn
+        self.scoreSensitivity = scoreSensitivity
         SJGlobals.joinHistory = []
         # Load test file
         if filetype == "pkl":
@@ -38,22 +42,13 @@ class SibJoin:
 
         self.setup(individuals, candidateParents = candidateParents,\
             strictAlleles=False)
+
         self.run()
-
-        # store original hs results for computing IP gains
-        self.origCHS = []
-        for cluster in SJGlobals.clusters.hsClusters:
-            self.origCHS.append(sorted([ind.index for ind in cluster.individuals]))
-
-        mHS, pHS = SJGlobals.clusters.sortMaternalPaternal()
-        ip = MinRemovals(individuals, mHS, pHS)
-        indsToRemove = ip.solve()
-        self.separateRun(indsToRemove)
 
         self.stopTime = time.time()
         self.runTime = self.stopTime - self.startTime
 
-        self.calculateStats(indsToRemove)
+        self.calculateStats()
 
     def readPkl(self, fn):
         f = open(fn, 'r')
@@ -82,7 +77,7 @@ class SibJoin:
 
         return [nLoci, individuals, candidateParents]
 
-    def calculateStats(self, indsToRemove):
+    def calculateStats(self):
         clusters = SJGlobals.clusters
         individuals = SJGlobals.individuals
         nIndvs = SJGlobals.nIndvs
@@ -100,34 +95,8 @@ class SibJoin:
 
         # Calculate variation of information
         cPos = [ind.hsClusters for ind in individuals]
-        #eT.compareResults(cHS)
-        '''
-        excludeInds = [ind.index for ind in indsToRemove]
-        for cluster in cHS:
-            for i in excludeInds:
-                if i in cluster:
-                    cluster.remove(i)
-        '''
-
         self.viNorm = eT.compareResults3(cHS, cPos)
         print self.viNorm
-
-        # Calculate false positive information with regards to IP
-        fp = []
-        res = eT.computeFP(self.origCHS)
-        fpInds = [s[0] for s in res]
-        # [0] = # FP
-        fp.append(len(res))
-        # [1] = # Identified by IP
-        fp.append(len(indsToRemove))
-        # [2] = # FP identified by IP
-        fp.append(len(set(fpInds) & set([ind.index for ind in indsToRemove])))
-        # [3] = % FP identified by IP
-        fp.append(float(fp[2]) / (float(fp[0]) + 0.00000000000001))
-        # [4] = % FP in IP
-        fp.append(float(fp[2]) / (float(fp[1]) + 0.00000000000001))
-        self.fp = fp
-        print fp
 
         x = [0]
         y = [0]
@@ -155,10 +124,9 @@ class SibJoin:
             x.append(float(i + 1) / float(nJoins))
             y.append(cnt)
 
+        '''
         fParts = self.fn.split("/")
         fPrefix = fParts[len(fParts) - 1].split(".")
-
-        '''
         graphOut = "results/graphs/" + fPrefix[0] + ".png"
         plt.clf()
         plt.plot(x, y)
@@ -166,29 +134,6 @@ class SibJoin:
         plt.ylabel("Total incorrect joins")
         plt.savefig(graphOut, format='png')
         '''
-        bC = []
-        yes = 0
-        no = 0
-        for ind in indsToRemove:
-            best = []
-            for cluster in clusters.hsClusters:
-                best.append([cluster.closenessScore(ind), cluster.clusterID])
-            best.sort(reverse=True)
-            bC.append(best[0])
-        for ind, best in zip(indsToRemove, bC):
-            cluster = clusters.hsClusters[best[1]]
-            clustIdx = [s.index for s in cluster.individuals]
-            clustIdx.append(ind.index)
-            bM = eT.findBestMatch(clustIdx)
-            if ind.index in bM[3]:
-                yes += 1
-            else:
-                no += 1
-        
-        if yes + no > 0:
-            self.fp.append(float(yes) / float(yes + no))
-        else:
-            self.fp.append(0)
 
     def createIndvs(self, inds):
         individuals = []
@@ -240,6 +185,21 @@ class SibJoin:
         # Create the dissimilarity mtx and allow all initial joins
         self.d, self.threshold = self.createDissimilarityMtx(threshold=True)
         SJGlobals.allowableJoins = self.createAllowableJoins([])
+
+        # Create a list of scores for each possible pairwise join
+        d = self.d
+        self.scores = []
+        self.sumOfScores = 0.0
+        maxScore = 2 * nLoci
+        for i in range(SJGlobals.nIndvs):
+            for j in range(i+1, SJGlobals.nIndvs):
+                score = math.pow(math.e,\
+                    self.scoreSensitivity * (maxScore - d[i][j]))
+                self.sumOfScores += score
+                self.scores.append([score, [individuals[i], individuals[j]]])
+        # We want higher scores toward the end for efficiency since they are
+        # more likely to be removed first.
+        self.scores.sort()
 
     def setupRelationships(fs):
         nIndvs = SJGlobals.nIndvs
@@ -320,6 +280,19 @@ class SibJoin:
 
         return [self.wrong, 2 * nIndvs, self.viNorm, self.matchNorm, self.runTime]
 
+    def removeScores(self, scores, sumOfScores, pairsToRemove):
+        for pair in pairsToRemove:
+            inds = sorted(pair)
+            for i, entry in enumerate(scores):
+                if inds[0].index == entry[1][0].index and\
+                    inds[1].index == entry[1][1].index:
+
+                    sumOfScores -= entry[0]
+                    scores.pop(i)
+                    break
+
+        return scores, sumOfScores
+
     def runAnalytics(self, indsToRemove):
         allowableJoins = SJGlobals.allowableJoins
         clusters = SJGlobals.clusters
@@ -368,101 +341,61 @@ class SibJoin:
         clusters = SJGlobals.clusters
         individuals = SJGlobals.individuals
         nIndvs = SJGlobals.nIndvs
+        scores = self.scores
+        sumOfScores = float(self.sumOfScores)
 
-        for t in range(self.threshold + 1):
-            largestFirst = []
-            for i in range(nIndvs):
-                for j in range(i + 1, nIndvs):
-                    if d[i][j] == t and allowable[i][j]:
-                        ind0 = individuals[i]
-                        ind1 = individuals[j]
+        random.seed(289)
 
-                        # Join full-siblings first
-                        vFS = JoinTests.isValidFSWithHS(ind0, ind1)
-                        if vFS[0]:
-                            clusters.joinFS(ind0.fsCluster, ind1.fsCluster,\
-                                vFS[1])
-                            if len(vFS) == 3:
-                                for fsJoin in vFS[2]:
-                                    clusters.join(fsJoin[1], fsJoin[0], fs=True)
-                        # Construct half-sibs.  Prefer larger families first
-                        else:
-                            for k in range(2):
-                                for l in range(2):
-                                    cSize = min(\
-                                        len(clusters.hsClusters[ind0.hsClusters[k]].individuals),\
-                                        len(clusters.hsClusters[ind1.hsClusters[l]])\
-                                    )
-                                    largestFirst.append([cSize, i, j, k, l])
-            largestFirst.sort(reverse=True)
-            for fam in largestFirst:
-                # Don't merge families which have already been merged or are
-                # invalid
-                if d[fam[1]][fam[2]] == -1 and allowable[fam[1]][fam[2]]:
-                    continue
+        while len(scores) > 0:
+            candidateJoin = random.randint(0, len(scores) - 1)
+            if random.random() < scores[candidateJoin][0] / sumOfScores:
+                ind0 = scores[candidateJoin][1][0]
+                ind1 = scores[candidateJoin][1][1]
 
-                ind0 = individuals[fam[1]]
-                ind1 = individuals[fam[2]]
-                clusterID0 = ind0.hsClusters[fam[3]]
-                clusterID1 = ind1.hsClusters[fam[4]]
-                vHS = JoinTests.isValidHS(clusterID0, clusterID1)
-                if vHS[0]:
-                    tmp = sorted([clusterID0, clusterID1])
-                    clusters.join(tmp[0], tmp[1])
-                    for fsJoin in vHS[1]:
-                        # fsJoin[1] is actually the smaller index
-                        clusters.join(fsJoin[1], fsJoin[0], fs=True)
+                pairsToRemove = set()
 
-        '''
+                # Try joining full-siblings first
+                vFS = JoinTests.isValidFSWithHS(ind0, ind1)
+                if vFS[0]:
+                    # Join initial half-sibs
+                    clusters.joinFS(ind0.fsCluster, ind1.fsCluster, vFS[1])
+
+                    # Make any other full-sib joins that were made necessary
+                    # by the half-sib joins
+                    if len(vFS) == 3:
+                        for fsJoin in vFS[2]:
+                            pairsToRemove = clusters.join(\
+                                fsJoin[1], fsJoin[0], fs=True)
+                            scores, sumOfScores = self.removeScores(\
+                                scores, sumOfScores, pairsToRemove)
+                # If FS doesn't work, try HS
+                else:
+                    hs = JoinTests.getCandidateHS(ind0, ind1)
+                    hsJoin = []
+                    if len(hs) > 0:
+                        hsJoin = hs[random.randint(0, len(hs) - 1)]
+
+                        clusterID0 = hsJoin[0]
+                        clusterID1 = hsJoin[1]
+                        vHS = JoinTests.isValidHS(clusterID0, clusterID1)
+                        if vHS[0]:
+                            tmp = sorted([clusterID0, clusterID1])
+                            clusters.join(tmp[0], tmp[1])
+                            for fsJoin in vHS[1]:
+                                # fsJoin[1] is actually the smaller index
+                                pairsToRemove = clusters.join(\
+                                    fsJoin[1], fsJoin[0], fs=True)
+                                scores, sumOfScores = self.removeScores(\
+                                    scores, sumOfScores, pairsToRemove)
+
+                scores, sumOfScores = self.removeScores(\
+                    scores, sumOfScores, set([tuple([ind0, ind1])]))
+
         ca = []
         for cluster in clusters.hsClusters:
             print sorted([ind.index for ind in cluster.individuals])
             ca.append(sorted([ind.index for ind in cluster.individuals]))
         print("")
-        '''
-
-    def separateRun(self, indsToRemove):
-        allowableJoins = SJGlobals.allowableJoins
-        clusters = SJGlobals.clusters
-        nIndvs = SJGlobals.nIndvs
-
-        # Remove the individuals
-        for ind in indsToRemove:
-            # Remove from full-sib family
-            fsCluster = ind.fsCluster
-            clusters.fsClusters[fsCluster].remove([ind.index])
-            # Remove empty clusters
-            if len(clusters.fsClusters[fsCluster]) == 0:
-                clusters.remove(fsCluster, True)
-
-            # Remove from both half-sib families
-            for i in range(2):
-                hsCluster = ind.hsClusters[i]
-                clusters.hsClusters[hsCluster].remove([ind.index])
-                # Remove empty clusters
-                if len(clusters.hsClusters[hsCluster]) == 0:
-                    clusters.remove(hsCluster, False)
-
-        SJGlobals.strictAlleles = True
-        # Re-add the individuals to clusters
-        newFSNum = len(clusters.fsClusters)
-        newHSNum = len(clusters.hsClusters)
-        for i, ind in enumerate(indsToRemove):
-            clusters.fsClusters.append(Cluster(i + newFSNum, [ind],\
-                fsCluster=True))
-            clusters.hsClusters.append(Cluster(2 * i + newHSNum, [ind]))
-            clusters.hsClusters.append(Cluster(2 * i + 1 + newHSNum, [ind]))
-        
-            for j in range(nIndvs):
-                if j != ind.index:
-                    allowableJoins[ind.index][j] = True
-                    allowableJoins[j][ind.index] = True
-
-        #SJGlobals.avgLinkage = True
-        SJGlobals.clusters = Clusters(clusters.fsClusters, clusters.hsClusters)
-
-        #self.runAvgLinkage()
-        self.run()
 
 if __name__ == '__main__':
     #sj = SibJoin("pkl", fn="../tests/indivs/050_6_6_7.pkl")

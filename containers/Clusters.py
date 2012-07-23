@@ -19,10 +19,10 @@ class Clusters:
     # In each case, destruction of old cluster must occur first
     def join(self, clusterID0, clusterID1, fs=False):
         joinHistory = SJGlobals.joinHistory
-        allowableJoins = SJGlobals.allowableJoins
 
         clusters = self.hsClusters
         jType = "hs"
+        pairsToRemove = set()
         if fs:
             clusters = self.fsClusters
             jType = "fs"
@@ -31,8 +31,7 @@ class Clusters:
             # full-sibs
             for ind0 in clusters[clusterID0].individuals:
                 for ind1 in clusters[clusterID1].individuals:
-                    allowableJoins[ind0.index][ind1.index] = False
-                    allowableJoins[ind1.index][ind0.index] = False
+                    pairsToRemove.add(tuple(sorted([ind0, ind1])))
         else:
             self.biGraph.combineNodes(clusterID0, clusterID1)
 
@@ -50,11 +49,13 @@ class Clusters:
         joinHistory.append(\
             [[ind.index for ind in clusters[clusterID0].individuals],\
             jType, clusterID0])
+        
+        return pairsToRemove
 
     def joinFS(self, fsClusterID0, fsClusterID1, hsClusterIDs):
         '''
         tmp = sorted([fsClusterID0, fsClusterID1])
-        self.join(tmp[0], tmp[1], fs=True)
+        pairsToRemove = self.join(tmp[0], tmp[1], fs=True)
         '''
 
         # We need to account for the removal of a HS family in the indexing
