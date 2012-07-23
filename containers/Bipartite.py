@@ -1,7 +1,7 @@
 import networkx as nx
 
+from networkx.algorithms import bipartite
 from SJGlobals import SJGlobals
-#from containers.Clusters import Clusters
 
 class Bipartite:
     def __init__(self, clusters):
@@ -60,4 +60,10 @@ class Bipartite:
 
     def relabelNodes(self, nodeNameMapping):
         nx.relabel_nodes(self.g, nodeNameMapping, copy=False)
+
+    def getPartitionings(self):
+        partitionings = [list(bipartite.sets(subG))\
+            for subG in nx.connected_component_subgraphs(self.g)]
+
+        return partitionings
 
