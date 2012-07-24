@@ -189,18 +189,6 @@ class EvaluationTools:
             graphPath = 'results/%s_Error.svg'%(fn)
         g.write_svg(graphPath, prog=['neato', '-n'])
 
-    def printDistanceMatrix(self, d):
-        tmp = '%3c' % ' '
-        for i in range(0, len(d)):
-            tmp += "%3d" % i
-        print(tmp)
-
-        for i in range(0, len(d)):
-            tmp = "%3d" % i
-            for j in range(0, len(d[i])):
-                tmp += "%3d" % d[i][j]
-            print(tmp)
-
     def drawResultsGraph(self, groupings, pop, fn, fs=False, altPath = ''):
         numIndiv = len(pop.individuals)
         g = pydot.graph_from_dot_file('graphs/%s.dot'%(fn))
@@ -232,15 +220,29 @@ class EvaluationTools:
         g.write_svg(graphPath, prog=['neato', '-n'])
 
     def printDistanceMatrix(self, d):
-        tmp = '%3c' % ' '
+        REDC = '\033[91m'
+        BLACKC = '\033[0m'
+        BLUEC = '\033[94m'
+
+        tmp = '%4c' % ' '
         for i in range(0, len(d)):
-            tmp += "%3d" % i
+            tmp += "%4d" % i
         print(tmp)
 
         for i in range(0, len(d)):
-            tmp = "%3d" % i
+            tmp = "%4d" % i
             for j in range(0, len(d[i])):
-                tmp += "%3d" % d[i][j]
+                if self.pop.isFS(i, j):
+                    tmp += REDC
+                    tmp += "%4d" % d[i][j]
+                    tmp += BLACKC
+                elif self.pop.isHS(i, j):
+                    tmp += BLUEC
+                    tmp += "%4d" % d[i][j]
+                    tmp += BLACKC
+                else:
+                    tmp += "%4d" % d[i][j]
+
             print(tmp)
 
     def printDistanceMatrixToFile(self, d, f):

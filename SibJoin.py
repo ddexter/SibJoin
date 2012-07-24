@@ -19,13 +19,18 @@ from Population import Population
 from SJGlobals import SJGlobals
 
 class SibJoin:
-    def __init__(self, filetype, fn=None, pop=None, scoreSensitivity=2.0):
+    def __init__(self, filetype, fn=None, pop=None, scoreSensitivity=4.0,\
+        rSeed=289):
         if (fn != None and pop != None) or (fn == None and pop == None):
             print("Error: Expected exactly one of (fn, pop) to be None")
 
+        random.seed(rSeed)
+
         self.fn = fn
         self.scoreSensitivity = scoreSensitivity
+
         SJGlobals.joinHistory = []
+
         # Load test file
         if filetype == "pkl":
             data = self.readPkl(fn)
@@ -49,6 +54,17 @@ class SibJoin:
         self.runTime = self.stopTime - self.startTime
 
         self.calculateStats()
+        self.resetSJGlobals()
+
+    def resetSJGlobals(self):
+        SJGlobals.avgLinkage = False
+        SJGlobals.candidateParents = []
+        SJGlobals.isFS = []
+        SJGlobals.isHS = []
+        SJGlobals.joinHistory = []
+        SJGlobals.nIndvs = -1
+        SJGlobals.nLoci = -1
+        SJGlobals.strictAlleles = False
 
     def readPkl(self, fn):
         f = open(fn, 'r')
@@ -282,10 +298,10 @@ class SibJoin:
 
     def removeScores(self, scores, sumOfScores, pairsToRemove):
         for pair in pairsToRemove:
-            inds = sorted(pair)
+            inds = sorted([pair[0].index, pair[1].index])
             for i, entry in enumerate(scores):
-                if inds[0].index == entry[1][0].index and\
-                    inds[1].index == entry[1][1].index:
+                if inds[0] == entry[1][0].index and\
+                    inds[1] == entry[1][1].index:
 
                     sumOfScores -= entry[0]
                     scores.pop(i)
@@ -334,7 +350,6 @@ class SibJoin:
             eT.printRealClusters(ind.index)
             print("")
 
-
     def run(self):
         allowable = SJGlobals.allowableJoins
         d = self.d
@@ -344,10 +359,9 @@ class SibJoin:
         scores = self.scores
         sumOfScores = float(self.sumOfScores)
 
-        random.seed(289)
-
         while len(scores) > 0:
             candidateJoin = random.randint(0, len(scores) - 1)
+            tmp = scores[candidateJoin][0] / sumOfScores
             if random.random() < scores[candidateJoin][0] / sumOfScores:
                 ind0 = scores[candidateJoin][1][0]
                 ind1 = scores[candidateJoin][1][1]
@@ -391,11 +405,10 @@ class SibJoin:
                 scores, sumOfScores = self.removeScores(\
                     scores, sumOfScores, set([tuple([ind0, ind1])]))
 
-        ca = []
+        self.ca = []
         for cluster in clusters.hsClusters:
-            print sorted([ind.index for ind in cluster.individuals])
-            ca.append(sorted([ind.index for ind in cluster.individuals]))
-        print("")
+            tmp = sorted([ind.index for ind in cluster.individuals])
+            self.ca.append(tmp)
 
 if __name__ == '__main__':
     #sj = SibJoin("pkl", fn="../tests/indivs/050_6_6_7.pkl")
