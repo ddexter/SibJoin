@@ -38,7 +38,6 @@ class Clusters:
 
         if SJGlobals.avgLinkage:
             self.updateAvgLinkageMtx(clusterID0, clusterID1, fs=fs)
-            #print sorted([s.index for s in clusters[clusterID0].individuals])
 
         # Remove the old cluster
         # Save off indices to add to first cluster

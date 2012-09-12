@@ -10,8 +10,10 @@ from containers.Bipartite import Bipartite
 from containers.Cluster import Cluster
 from containers.Clusters import Clusters
 from containers.Individual import Individual
+from IPSolver import IPSolver
 from JoinTests import JoinTests
 from MinRemovals import MinRemovals
+from OriginalIP import OriginalIP
 from Population import Population
 from SJGlobals import SJGlobals
 
@@ -46,9 +48,12 @@ class SibJoin:
             self.origCHS.append(sorted([ind.index for ind in cluster.individuals]))
 
         mHS, pHS = SJGlobals.clusters.sortMaternalPaternal()
-        ip = MinRemovals(individuals, mHS, pHS)
-        indsToRemove = ip.solve()
-        self.separateRun(indsToRemove)
+
+        #ip = MinRemovals(individuals, mHS, pHS)
+        #indsToRemove, self.integrality = ip.solve()
+        #self.separateRun(indsToRemove)
+        indsToRemove = []
+        self.integrality = False
 
         self.stopTime = time.time()
         self.runTime = self.stopTime - self.startTime
@@ -110,7 +115,7 @@ class SibJoin:
         '''
 
         self.viNorm = eT.compareResults3(cHS, cPos)
-        print self.viNorm
+        #print self.viNorm
 
         # Calculate false positive information with regards to IP
         fp = []
@@ -127,7 +132,6 @@ class SibJoin:
         # [4] = % FP in IP
         fp.append(float(fp[2]) / (float(fp[1]) + 0.00000000000001))
         self.fp = fp
-        print fp
 
         x = [0]
         y = [0]
@@ -154,6 +158,19 @@ class SibJoin:
 
             x.append(float(i + 1) / float(nJoins))
             y.append(cnt)
+        lenY = len(y)
+
+        # [5] = FP frequency after 20, 40, ..., 100% of joins
+        self.errorMarkers = []
+        if y[lenY - 1] > 0:
+            self.fp.append(float(y[int(lenY * 0.25) - 1]) / float(y[lenY - 1]))
+            for step in [0.20, 0.40, 0.60, 0.80, 1.00]:
+                self.errorMarkers.append(\
+                    float(y[int(lenY * step) - 1])/ float(y[lenY - 1]))
+        else:
+            self.fp.append(0)
+            self.errorMarkers = [0.0, 0.0, 0.0, 0.0, 0.0]
+        self.errorMarkers.append(y[lenY - 1])
 
         fParts = self.fn.split("/")
         fPrefix = fParts[len(fParts) - 1].split(".")
@@ -166,6 +183,7 @@ class SibJoin:
         plt.ylabel("Total incorrect joins")
         plt.savefig(graphOut, format='png')
         '''
+
         bC = []
         yes = 0
         no = 0
@@ -184,7 +202,8 @@ class SibJoin:
                 yes += 1
             else:
                 no += 1
-        
+       
+        # [6]
         if yes + no > 0:
             self.fp.append(float(yes) / float(yes + no))
         else:
@@ -349,7 +368,7 @@ class SibJoin:
                 best.append([cluster.avgLinkageDissimilarity(tmpCluster),
                     cluster.clusterID])
             best.sort()
-
+            '''
             print(ind.index, best[0][0],\
                 sorted([s.index for s in\
                 clusters.hsClusters[best[0][1]].individuals]))
@@ -360,7 +379,7 @@ class SibJoin:
 
             eT.printRealClusters(ind.index)
             print("")
-
+            '''
 
     def run(self):
         allowable = SJGlobals.allowableJoins
@@ -464,8 +483,12 @@ class SibJoin:
         #self.runAvgLinkage()
         self.run()
 
+    def getClusterings(self):
+        return SJGlobals.clusters.sortMaternalPaternal()
+
 if __name__ == '__main__':
-    #sj = SibJoin("pkl", fn="../tests/indivs/050_6_6_7.pkl")
+    #sj = SibJoin("pkl", fn="../tests/indivs/200_6_6_7.pkl")
     #sj = SibJoin("pkl", fn="../tests/alleles/40_20_6_0.pkl")
     sj = SibJoin("pkl", fn="../tests/loci/40_6_05_5.pkl")
+    #sj = SibJoin("pkl", fn="../tests/indivs/010_6_6_5.pkl")
 

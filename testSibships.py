@@ -55,7 +55,7 @@ def generateTests():
             random.shuffle(pop.individuals)
 
             if i < 10:
-                nI = "00%d" % (i)
+                nI = "00%d" %False
             elif i < 100:
                 nI = "0%d" % (i)
             else:
@@ -164,18 +164,26 @@ def test(fn, vi, match, optsA=[], optsR=[], xOpts=[], verbose=False,
     if outfile != '':
         out = open(outfile, 'a')
     out2 = open("results/fp.txt", 'a')
+    out3 = open("results/errorRates.txt", 'a')
 
     path = '../tests/' + fn
     fileList = os.listdir(path)
     fileList.sort()
     res = []
+    nonIntegralityCnt = 0
+    fpAvg = [0] * 7
+    eRAvg = [0] * 6
+    avgCnt = 0
+    eRDiv = 0
     for i,test in enumerate(fileList):
         f = test.split('.')
 
         sj = SibJoin("pkl", fn='../tests/%s%s.pkl' % (fn, f[0]))
         res = sj.getResults()
         fp = sj.fp
-        fpAvg = [0] * len(fp)
+        eR = sj.errorMarkers
+        if not sj.integrality:
+            nonIntegralityCnt += 1
 
         vi.append(res[2])
         match.append(res[3])
@@ -183,8 +191,16 @@ def test(fn, vi, match, optsA=[], optsR=[], xOpts=[], verbose=False,
 
         if out != '':
             out.write("%s%s %f %f\n" % (fn, f[0], res[2], res[3]))
-            out2.write("%s%s %d %d %d %f %f %f\n" % (fn, f[0], fp[0], fp[1], fp[2], fp[3], fp[4], fp[5]))
-            fpAvg = [fp[j] + fpAvg[j] for j in range(len(fp))]
+            out2.write("%s%s %d %d %d %f %f %f\n" % (fn, f[0], fp[0],\
+                fp[1], fp[2], fp[3], fp[4], fp[5]))
+            out3.write("%s%s %f %f %f %f %f\n" % (fn, f[0], eR[0], eR[1],\
+                eR[2], eR[3], eR[4]))
+            if fp[0] > 0:
+                avgCnt += 1
+                fpAvg = [fp[j] + fpAvg[j] for j in range(len(fp))]
+                eRAvg = [eR[j] + eRAvg[j] for j in range(len(eR))]
+                if eR[4] > 0.0:
+                    eRDiv += 1
             '''
             r = sj.res0
             if r[5] > 0:
@@ -199,15 +215,32 @@ def test(fn, vi, match, optsA=[], optsR=[], xOpts=[], verbose=False,
             out.write("\n")
             '''
             if (i + 1) % numTests == 0:
+                if eRDiv == 0:
+                    eRDiv = 1
+                for j in range(len(eRAvg) -1):
+                    eRAvg[j] = float(eRAvg[j]) / float(eRDiv)
+
+                if avgCnt > 0:
+                    fpAvg = [float(fpAvg[j]) / float(avgCnt) for j in range(len(fp))]
                 aVI = sum(vi) / float(numTests)
                 aMatch = sum(match) / float(numTests)
                 aTime = sum(time) / float(numTests)
-                out.write("***%s%s %f %f %f\n" % (fn, f[0], aVI, aMatch, aTime))
-                out2.write("***%s%s %d %d %d %f %f %f\n" % (fn, f[0], fp[0], fp[1], fp[2], fp[3], fp[4], fp[5]))
+                out.write("***%s%s %f %f %f\n" % (fn, f[0], aVI, aMatch,
+                    aTime))
+                out2.write("***%s%s %d %d %d %f %f %f %f\n" % (fn, f[0],\
+                    fpAvg[0], fpAvg[1], fpAvg[2], fpAvg[3], fpAvg[4],\
+                    fpAvg[5], float(nonIntegralityCnt) / float(numTests)))
+                out3.write("***%s%s %f %f %f %f %f %f\n" % (fn, f[0],\
+                    eRAvg[0], eRAvg[1], eRAvg[2], eRAvg[3], eRAvg[4],\
+                    float(eRAvg[5]) / 10.0))
                 vi = []
                 match = []
                 time = []
                 fpAvg = [0] * len(fp)
+                eRAvg = [0] * len(eR)
+                nonIntegralityCnt = 0
+                avgCnt = 0
+                eRDiv = 0
 
         if verbose:
             print('%s%s: %f %f' %\

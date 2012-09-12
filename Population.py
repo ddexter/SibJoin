@@ -71,9 +71,6 @@ class Population:
             self.individuals.append(\
                 [int(tmp[x]) for x in range(1, len(tmp))])
         
-        for ind in self.individuals:
-            print ind
-
     # Add a family to the population
     def addFamily(self, children, father, mother, unique=False):
         # Do not allow duplicates

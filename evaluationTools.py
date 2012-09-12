@@ -395,7 +395,7 @@ class EvaluationTools:
                     I += P_k_kp * math.log(P_k_kp/(P_k * P_kp), 2)
 
         VI = HC + HCp - 2.0 * I
-        
+
         return VI
 
 # I need a rewrite, inefficient, but works

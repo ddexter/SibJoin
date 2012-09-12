@@ -163,9 +163,11 @@ class MinRemovals():
 
         '''
         print("Solution status: {0}".format(self.ip.solution.get_status()))
-        print("Solution value: {0}".format(\
+        print("Solution value: {0}\n".format(\
             self.ip.solution.get_objective_value()))
         '''
+
+        integrality = (self.ip.solution.get_status() == 101)
 
         names = self.ip.variables.get_names(0, nIndvs - 1)
         variables = self.ip.solution.get_values(0, nIndvs - 1)
@@ -175,4 +177,5 @@ class MinRemovals():
                 ret.append(individuals[i])
                 #print names[i], variables[i]
 
-        return ret
+        return ret, integrality
+
