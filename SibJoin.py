@@ -28,8 +28,7 @@ class SibJoin:
 
         self.fn = fn
         self.scoreSensitivity = scoreSensitivity
-
-        SJGlobals.joinHistory = []
+        relatedScores = []
 
         # Load test file
         if filetype == "pkl":
@@ -39,22 +38,38 @@ class SibJoin:
         else:
             data = self.readPop(pop)
 
-        self.startTime = time.time()
+        for its in range(100):
+            print its
+            self.startTime = time.time()
 
-        SJGlobals.nLoci = data[0]
-        individuals = self.createIndvs(data[1])
-        candidateParents = data[2]
+            SJGlobals.nLoci = data[0]
+            individuals = self.createIndvs(data[1])
+            candidateParents = data[2]
 
-        self.setup(individuals, candidateParents = candidateParents,\
-            strictAlleles=False)
+            if relatedScores == []:
+                relatedScores = [[0] * len(individuals)\
+                    for i in range(len(individuals))]
 
-        self.run()
+            self.setup(individuals, candidateParents = candidateParents,\
+                strictAlleles=False)
 
-        self.stopTime = time.time()
-        self.runTime = self.stopTime - self.startTime
+            self.run()
 
-        self.calculateStats()
-        self.resetSJGlobals()
+            self.stopTime = time.time()
+            self.runTime = self.stopTime - self.startTime
+
+            for cluster in SJGlobals.clusters.hsClusters:
+                for i in range(len(cluster.individuals)):
+                    for j in range(i + 1, len(cluster.individuals)):
+                        ind0 = cluster.individuals[i].index
+                        ind1 = cluster.individuals[j].index
+                        relatedScores[ind0][ind1] += 1
+
+            #self.resetSJGlobals()
+
+        for row in relatedScores:
+            print row
+
 
     def resetSJGlobals(self):
         SJGlobals.avgLinkage = False
@@ -92,64 +107,6 @@ class SibJoin:
         candidateParents = lines[nIndvs+3:]
 
         return [nLoci, individuals, candidateParents]
-
-    def calculateStats(self):
-        clusters = SJGlobals.clusters
-        individuals = SJGlobals.individuals
-        nIndvs = SJGlobals.nIndvs
-        joinHistory = SJGlobals.joinHistory
-
-        cHS = []
-        for cluster in clusters.hsClusters:
-            inds = [ind.index for ind in cluster.individuals]
-            cHS.append(inds)
-
-        eT = evaluationTools.EvaluationTools(self.pop)
-        correct = eT.computeMaxMatchings(cHS)
-        self.wrong = 2 * nIndvs - correct
-        self.matchNorm = float(self.wrong) / float(2 * nIndvs)
-
-        # Calculate variation of information
-        cPos = [ind.hsClusters for ind in individuals]
-        self.viNorm = eT.compareResults3(cHS, cPos)
-        print self.viNorm
-
-        x = [0]
-        y = [0]
-        cnt = 0
-        nJoins = len(joinHistory)
-        for i, join in enumerate(joinHistory):
-            cID = join[2]
-            if join[1] == "fs":
-                continue
-            nFP, a, b, bM, d = eT.findBestMatch(join[0])
-            # Account for individuals which have already been involved in a 
-            # bad join
-            for ind in join[0]:
-                if ind not in bM:
-                    # Part of bad join, mark that it's already been involved
-                    if not individuals[ind].hasFalseJoin(cID):
-                        individuals[ind].markFalseJoin(cID)
-                    # Already part of a bad join, don't count it
-                    else:
-                        nFP -= 1
-
-            if nFP > 0:
-                cnt += 1
-
-            x.append(float(i + 1) / float(nJoins))
-            y.append(cnt)
-
-        '''
-        fParts = self.fn.split("/")
-        fPrefix = fParts[len(fParts) - 1].split(".")
-        graphOut = "results/graphs/" + fPrefix[0] + ".png"
-        plt.clf()
-        plt.plot(x, y)
-        plt.xlabel("% complete - HS joins")
-        plt.ylabel("Total incorrect joins")
-        plt.savefig(graphOut, format='png')
-        '''
 
     def createIndvs(self, inds):
         individuals = []
@@ -292,9 +249,8 @@ class SibJoin:
             return d
 
     def getResults(self):
-        nIndvs = SJGlobals.nIndvs
-
-        return [self.wrong, 2 * nIndvs, self.viNorm, self.matchNorm, self.runTime]
+        return [self.wrong, 2 * SJGlobals.nIndvs, self.viNorm,\
+            self.matchNorm, self.runTime]
 
     def removeScores(self, scores, sumOfScores, pairsToRemove):
         for pair in pairsToRemove:
@@ -308,47 +264,6 @@ class SibJoin:
                     break
 
         return scores, sumOfScores
-
-    def runAnalytics(self, indsToRemove):
-        allowableJoins = SJGlobals.allowableJoins
-        clusters = SJGlobals.clusters
-        nIndvs = SJGlobals.nIndvs
-
-        eT = evaluationTools.EvaluationTools(self.pop)
-
-        for ind in indsToRemove:
-            fsCluster = ind.fsCluster
-            clusters.fsClusters[fsCluster].remove([ind.index])
-            if len(clusters.fsClusters[fsCluster]) == 0:
-                clusters.remove(fsCluster, True)
-
-            for i in range(2):
-                hsCluster = ind.hsClusters[i]
-                clusters.hsClusters[hsCluster].remove([ind.index])
-                # Remove empty clusters
-                if len(clusters.hsClusters[hsCluster]) == 0:
-                    clusters.remove(hsCluster, False)
-
-        newFSNum = len(clusters.fsClusters)
-        newHSNum = len(clusters.hsClusters)
-        for ind in indsToRemove:
-            best = []
-            tmpCluster = Cluster(newHSNum, [ind])
-            for cluster in clusters.hsClusters:
-                best.append([cluster.avgLinkageDissimilarity(tmpCluster),
-                    cluster.clusterID])
-            best.sort()
-
-            print(ind.index, best[0][0],\
-                sorted([s.index for s in\
-                clusters.hsClusters[best[0][1]].individuals]))
-
-            print(ind.index, best[1][0],\
-                sorted([s.index for s in\
-                clusters.hsClusters[best[1][1]].individuals]))
-
-            eT.printRealClusters(ind.index)
-            print("")
 
     def run(self):
         allowable = SJGlobals.allowableJoins
