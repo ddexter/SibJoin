@@ -7,11 +7,23 @@ import random
 import re
 import time
 
+from IPSolver import IPSolver
 from Population import Population
 #from SibJoin import SibJoin
 from SibJoin import SibJoin
 
 def generateTests():
+    # Test IP
+    # 6 alleles, 6 loci, popSize /  3 mothers and fathers, 5 children
+    for i in range(10, 26, 5):
+        for j in range(10):
+            rSeed = 1399 * i + 931 * j
+            pop = Population(6, 6, i / 3, i / 3, 5, 5, randomSeed=rSeed)
+            pop.genPopulation(i)
+            random.shuffle(pop.individuals)
+
+            pop.saveState("tests/ip/%d_6_6_%d.pkl" % (i, j))
+
     # Test number of alleles
     # 6 loci, 7 mothers, 7 fathers, 5 children, 40 individuals
     alleles = [2, 5, 10, 15, 20]
@@ -166,7 +178,7 @@ def test(fn, vi, match, optsA=[], optsR=[], xOpts=[], verbose=False,
     out2 = open("results/fp.txt", 'a')
     out3 = open("results/errorRates.txt", 'a')
 
-    path = '../tests/' + fn
+    path = 'tests/' + fn
     fileList = os.listdir(path)
     fileList.sort()
     res = []
@@ -265,7 +277,6 @@ def testCOLONY():
         match = []
         numTests = 10
 
-
         for i,test in enumerate(fileList):
             '''
             TEST COLONY
@@ -349,8 +360,52 @@ def testPaper():
     for fn in testDirs:
         test(fn, vi, match, outfile='results/paperResults.txt', verbose=True)
 
+def testIP():
+    path = "tests/ip"
+    fileList = os.listdir(path)
+    fileList.sort()
+    t = []
+    viSJ = []
+    viIP = []
+    out = open("results/ipResults.txt", "a")
+    numTests = 10
+
+    for i,test in enumerate(fileList):
+        f = test.split('.')
+
+        sj = SibJoin("pkl", fn='tests/%s%s.pkl' % ("ip/", f[0]))
+        res = sj.getResults()
+        viSJ.append(res[2])
+        clusterings = sj.getClusterings()
+
+        ipGuesses = [int(len(clusterings[0]) * 1.1),\
+            int(len(clusterings[1]) * 1.1)]
+        ip = IPSolver("pkl", fn="tests/%s%s.pkl" % ("ip/", f[0]),
+            guesses=ipGuesses)
+        res2 = ip.getResults()
+        viIP.append(res2[1])
+        t.append(res2[2])
+        out.write("%s: %f %f %f\n" %\
+            (f[0], res[2], res2[1], res2[2]))
+
+        print("%s: %f %f %f" % (f[0], res[2], res2[1], res2[2]))
+        
+        if (i + 1) % 10 == 0:
+            sjVIMean = sum(viSJ) / 10.0
+            ipVIMean = sum(viIP) / 10.0
+            ipTimeMean = sum(t) / 10.0
+            out.write("**%s: %f %f %f\n" %\
+                (f[0], sjVIMean, ipVIMean, ipTimeMean))
+
+            t = []
+            viSJ = []
+            viIP = []
+
+    out.close()
+
 if __name__ == '__main__':
     #generateTests()
     #testCOLONY()
-    testPaper()
+    #testPaper()
+    testIP()
 
