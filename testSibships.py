@@ -373,29 +373,42 @@ def testIP():
     for i,test in enumerate(fileList):
         f = test.split('.')
 
+        '''
         sj = SibJoin("pkl", fn='tests/%s%s.pkl' % ("ip/", f[0]))
         res = sj.getResults()
         viSJ.append(res[2])
         clusterings = sj.getClusterings()
+        '''
 
+        '''
         ipGuesses = [int(len(clusterings[0]) * 1.1),\
             int(len(clusterings[1]) * 1.1)]
+        '''
         ip = IPSolver("pkl", fn="tests/%s%s.pkl" % ("ip/", f[0]),
-            guesses=ipGuesses)
+            guesses=[0,0])
         res2 = ip.getResults()
         viIP.append(res2[1])
         t.append(res2[2])
+        '''
         out.write("%s: %f %f %f\n" %\
             (f[0], res[2], res2[1], res2[2]))
+        '''
+        out.write("%s: %f %f\n" %\
+            (f[0], res2[1], res2[2]))
 
-        print("%s: %f %f %f" % (f[0], res[2], res2[1], res2[2]))
+        #print("%s: %f %f %f" % (f[0], res[2], res2[1], res2[2]))
+        print("%s: %f %f" % (f[0], res2[1], res2[2]))
         
         if (i + 1) % 10 == 0:
-            sjVIMean = sum(viSJ) / 10.0
+            #sjVIMean = sum(viSJ) / 10.0
             ipVIMean = sum(viIP) / 10.0
             ipTimeMean = sum(t) / 10.0
+            '''
             out.write("**%s: %f %f %f\n" %\
                 (f[0], sjVIMean, ipVIMean, ipTimeMean))
+            '''
+            out.write("**%s: %f %f\n" %\
+                (f[0], ipVIMean, ipTimeMean))
 
             t = []
             viSJ = []
