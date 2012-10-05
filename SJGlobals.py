@@ -4,12 +4,15 @@ python gets -- for variables which need to be shared across many SibJoin
 sub-packages
 '''
 class SJGlobals:
-    avgLinkage = False
+    hasCandidateParents = False
     candidateParents = []
-    isFS = []
-    isHS = []
-    joinHistory = []
     nIndvs = -1
     nLoci = -1
     strictAlleles = False
 
+    def clear(self):
+        self.candidateParents = []
+        self.hasCandidateParents = False
+        self.nIndvs = -1
+        self.nLoci = -1
+        self.strictAlleles = False
