@@ -10,6 +10,7 @@ class JoinTests:
     @classmethod
     def isValidHS(self, clusterID0, clusterID1):
         allowable = SJGlobals.allowableJoins
+        allowableClusterJoins = SJGlobals.allowableClusterJoins
         candidateParents = SJGlobals.candidateParents
         clusters = SJGlobals.clusters
         nLoci = SJGlobals.nLoci
@@ -19,10 +20,14 @@ class JoinTests:
         cluster1 = clusters.hsClusters[clusterID1]
 
         # Test that we're not combining the same individual
+        '''
         for ind0 in cluster0.individuals:
             for ind1 in cluster1.individuals:
                 if ind0.index == ind1.index:
                     return [False]
+        '''
+        if not allowableClusterJoins[clusterID0][clusterID1]:
+            return [False]
 
         # Test that any newly forced FS groups are valid FS
         fsToJoin = set()
@@ -53,15 +58,21 @@ class JoinTests:
             for l in range(nLoci):
                 parents = cluster0.allParents[l] & cluster1.allParents[l]
                 if len(parents) == 0:
+                    allowableClusterJoins[clusterID0][clusterID1] = False
+                    allowableClusterJoins[clusterID1][clusterID0] = False
                     return [False]
 
         # Test that we maintain bipartiteness
         if not clusters.biGraph.isValidCombining([[clusterID0, clusterID1]]):
+            allowableClusterJoins[clusterID0][clusterID1] = False
+            allowableClusterJoins[clusterID1][clusterID0] = False
             return [False]
 
         if strictAlleles and\
             not self.isHSAlleleCompat(clusterID0, clusterID1):
 
+            allowableClusterJoins[clusterID0][clusterID1] = False
+            allowableClusterJoins[clusterID1][clusterID0] = False
             return [False]
 
         return [True, sorted(fsToJoin, reverse = True)]
@@ -140,6 +151,19 @@ class JoinTests:
     @classmethod
     def isValidFSWithHS(self, ind0, ind1):
         clusters = SJGlobals.clusters
+        allowableClusterJoins = SJGlobals.allowableClusterJoins
+
+        hs00 = ind0.hsClusters[0]
+        hs01 = ind0.hsClusters[1]
+        hs10 = ind1.hsClusters[0]
+        hs11 = ind1.hsClusters[1]
+
+        if not (allowableClusterJoins[hs00][hs10] and\
+                allowableClusterJoins[hs01][hs11]) and\
+            not (allowableClusterJoins[hs00][hs11] and\
+                allowableClusterJoins[hs01][hs10]):
+
+            return [False]
 
         # Test 1: Forms valid FS Group
         candidateCluster =\
@@ -154,10 +178,6 @@ class JoinTests:
         # Test 2: The maternal and paternal clusters from both groups are
         #   each mutually compatible.  Either fams 0,0 and 1,1 can join or
         #   0,1 and 1,0 can join.  Both need to be checked.
-        hs00 = ind0.hsClusters[0]
-        hs01 = ind0.hsClusters[1]
-        hs10 = ind1.hsClusters[0]
-        hs11 = ind1.hsClusters[1]
         sharedCluster = ind0.sharesHSCluster(ind1)
         if sharedCluster[0]:
             clusterID0 = ind0.getOppositeHSFam(sharedCluster[1])

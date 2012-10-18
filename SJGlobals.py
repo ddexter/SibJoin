@@ -5,12 +5,16 @@ sub-packages
 '''
 class SJGlobals:
     hasCandidateParents = False
+    allowableClusterJoins = []
+    allowableJoins = []
     candidateParents = []
     nIndvs = -1
     nLoci = -1
     strictAlleles = False
 
     def clear(self):
+        self.allowableJoins = []
+        self.allowableClusterJoins = []
         self.candidateParents = []
         self.hasCandidateParents = False
         self.nIndvs = -1

@@ -17,6 +17,7 @@ class Clusters:
     def join(self, clusterID0, clusterID1, fs=False):
         joinHistory = SJGlobals.joinHistory
         allowableJoins = SJGlobals.allowableJoins
+        allowableClusterJoins = SJGlobals.allowableClusterJoins
 
         clusters = self.hsClusters
         jType = "hs"
@@ -33,10 +34,15 @@ class Clusters:
         else:
             self.biGraph.combineNodes(clusterID0, clusterID1)
 
+        for i in range(2 * SJGlobals.nIndvs):
+            allowableClusterJoins[i][clusterID1] = False
+            if not allowableClusterJoins[clusterID1][i]:
+                allowableClusterJoins[clusterID0][i] = False
+            
         clusters[clusterID1].deleteCluster()
 
         clusters[clusterID0].add(clusters[clusterID1])
-        clusters[clusterID1] = []
+        del clusters[clusterID1]
 
     def joinFS(self, fsClusterID0, fsClusterID1, hsClusterIDs):
         if len(hsClusterIDs) == 2:
@@ -50,11 +56,12 @@ class Clusters:
             self.join(hsClusterIDs[0][0], hsClusterIDs[0][1])
 
     def sortMaternalPaternal(self):
-
+        '''
         self.hsClusters = {k : v for k,v in self.hsClusters.iteritems()\
             if v != []}
         self.fsClusters = {k : v for k,v in self.fsClusters.iteritems()\
             if v != []}
+        '''
 
         clusters = self.hsClusters
         '''

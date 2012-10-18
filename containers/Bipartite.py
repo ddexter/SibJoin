@@ -8,11 +8,11 @@ class Bipartite:
         self.g = nx.Graph()
         individuals = SJGlobals.individuals
 
-        for cluster in clusters:
-            self.g.add_node(cluster.clusterID)
+        for cluster in clusters.items():
+            self.g.add_node(cluster[1].clusterID)
 
-        for cluster in clusters:
-            for ind in cluster.individuals:
+        for cluster in clusters.items():
+            for ind in cluster[1].individuals:
                 self.g.add_edge(ind.hsClusters[0], ind.hsClusters[1])
 
     def combineNodes(self, clusterID0, clusterID1):

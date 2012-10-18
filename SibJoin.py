@@ -15,6 +15,7 @@ from JoinTests import JoinTests
 from MinRemovals import MinRemovals
 from OriginalIP import OriginalIP
 from Population import Population
+from SibJoinBuilder import SibJoinBuilder
 from SJGlobals import SJGlobals
 
 class SibJoin:
@@ -22,6 +23,7 @@ class SibJoin:
         builder = SibJoinBuilder(filetype, fn=fn, pop=pop)
         self.d, self.threshold = builder.setupResults()
 
+        self.startTime = time.time()
         self.run()
 
         self.stopTime = time.time()
@@ -82,8 +84,9 @@ class SibJoin:
         return SJGlobals.clusters.sortMaternalPaternal()
 
 if __name__ == '__main__':
-    #sj = SibJoin("pkl", fn="../tests/indivs/200_6_6_7.pkl")
+    #sj = SibJoin("pkl", fn="../tests/big/2000_6_10_7.pkl")
+    sj = SibJoin("pkl", fn="../tests/indivs/200_6_6_7.pkl")
     #sj = SibJoin("pkl", fn="../tests/alleles/40_20_6_0.pkl")
-    sj = SibJoin("pkl", fn="../tests/loci/40_6_05_5.pkl")
+    #sj = SibJoin("pkl", fn="../tests/loci/40_6_05_5.pkl")
     #sj = SibJoin("pkl", fn="../tests/indivs/010_6_6_5.pkl")
 
