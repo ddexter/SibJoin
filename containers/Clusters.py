@@ -34,10 +34,10 @@ class Clusters:
         else:
             self.biGraph.combineNodes(clusterID0, clusterID1)
 
-        for i in range(2 * SJGlobals.nIndvs):
-            allowableClusterJoins[i][clusterID1] = False
-            if not allowableClusterJoins[clusterID1][i]:
-                allowableClusterJoins[clusterID0][i] = False
+            for i in range(2 * SJGlobals.nIndvs):
+                allowableClusterJoins[i][clusterID1] = False
+                if not allowableClusterJoins[clusterID1][i]:
+                    allowableClusterJoins[clusterID0][i] = False
             
         clusters[clusterID1].deleteCluster()
 
@@ -56,14 +56,8 @@ class Clusters:
             self.join(hsClusterIDs[0][0], hsClusterIDs[0][1])
 
     def sortMaternalPaternal(self):
-        '''
-        self.hsClusters = {k : v for k,v in self.hsClusters.iteritems()\
-            if v != []}
-        self.fsClusters = {k : v for k,v in self.fsClusters.iteritems()\
-            if v != []}
-        '''
-
         clusters = self.hsClusters
+
         '''
         Construct the algorithm's half-sibs.  We partition the clusters in
         to a maternal and paternal side 0 = Maternal, 1 = Paternal.  This
@@ -74,6 +68,7 @@ class Clusters:
         cluster representing the other parent can be added to the opposite
         partition.
         '''
+
         aHS = []
         addedClusters = [False] * len(clusters)
         numClusters = len(clusters)

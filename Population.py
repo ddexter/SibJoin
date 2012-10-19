@@ -214,19 +214,19 @@ class Population:
     def printHSFams(self):
         print("Parent Sex A:")
         for father in self.childDictFKey:
-            tmp = ''
+            tmp = []
             for child in self.childDictFKey[father]:
-                tmp += "%3d" % self.individuals.index(child)
-            print(tmp)
+                tmp.append(self.individuals.index(child))
+            print(sorted(tmp))
 
         print('')
 
         print("Parent Sex B:")
         for mother in self.childDictMKey:
-            tmp = ''
+            tmp = []
             for child in self.childDictMKey[mother]:
-                tmp += "%3d" % self.individuals.index(child)
-            print(tmp)
+                tmp.append(self.individuals.index(child))
+            print(sorted(tmp))
 
     def saveState(self, outfile):
         f = open(outfile, 'w')

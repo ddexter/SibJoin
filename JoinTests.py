@@ -9,6 +9,7 @@ from SJGlobals import SJGlobals
 class JoinTests:
     @classmethod
     def isValidHS(self, clusterID0, clusterID1):
+        
         allowable = SJGlobals.allowableJoins
         allowableClusterJoins = SJGlobals.allowableClusterJoins
         candidateParents = SJGlobals.candidateParents
@@ -45,6 +46,8 @@ class JoinTests:
                         fsToJoin.add(tuple(sorted([\
                             ind0.fsCluster, ind1.fsCluster], reverse=True)))
                     else:
+                        allowableClusterJoins[clusterID0][clusterID1] = False
+                        allowableClusterJoins[clusterID1][clusterID0] = False
                         return [False]
 
         # Test that all individuals can be explained by at least one parent
@@ -158,12 +161,14 @@ class JoinTests:
         hs10 = ind1.hsClusters[0]
         hs11 = ind1.hsClusters[1]
 
+        '''
         if not (allowableClusterJoins[hs00][hs10] and\
                 allowableClusterJoins[hs01][hs11]) and\
             not (allowableClusterJoins[hs00][hs11] and\
                 allowableClusterJoins[hs01][hs10]):
 
             return [False]
+        '''
 
         # Test 1: Forms valid FS Group
         candidateCluster =\
