@@ -30,6 +30,9 @@ class SibJoin:
         self.stopTime = time.time()
         self.runTime = self.stopTime - self.startTime
 
+        for i in SJGlobals.clusters.hsClusters.keys():
+            print sorted([ind.index for ind in SJGlobals.clusters.hsClusters[i].individuals])
+
     def run(self):
         allowable = SJGlobals.allowableJoins
         d = self.d

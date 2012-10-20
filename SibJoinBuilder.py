@@ -17,7 +17,7 @@ class SibJoinBuilder:
         if filetype == "pkl":
             data = self.readPkl(fn)
         elif filetype == "txt":
-            data = self.readText(fn)
+            data = self.readTxt(fn)
             named = True
         else:
             data = self.readPop(fn)
@@ -153,7 +153,7 @@ class SibJoinBuilder:
             for j in range(nLoci):
                 loci.append([int(ind[2 * j]), int(ind[2 * j + 1])])
 
-            individuals.append(Individual(-1, [-1, -1], i, loci), name=name)
+            individuals.append(Individual(-1, [-1, -1], i, loci, name=name))
 
         return individuals
 
