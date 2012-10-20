@@ -151,7 +151,7 @@ class SibJoinBuilder:
             loci = []
 
             for j in range(nLoci):
-                loci.append([int(ind[2 * j]), int(ind[2 * j + 1]]))
+                loci.append([int(ind[2 * j]), int(ind[2 * j + 1])])
 
             individuals.append(Individual(-1, [-1, -1], i, loci), name=name)
 

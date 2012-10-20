@@ -18,6 +18,17 @@ Entry Point:
     SibJoin.py: Takes a file and calls SibJoinBuilder object to prepare
 	the algorithm.  The run function handles searching at different
 	thresholds.
+    
+    Example (Run with CSV file):
+	python SibJoin.py individuals.txt
+
+    CSV Input Format (denote missing alleles with -1):
+	Animal0,13,17,-1,-1,-1,-1
+	Animal1,13,19,10,3,7,7
+	.
+	.
+	.
+	AnimalN,18,17,3,4,8,2
 
 Container Classes:
     Containers hold information about individuals and clusters

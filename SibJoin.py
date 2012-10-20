@@ -1,5 +1,4 @@
 import copy
-import evaluationTools
 import matplotlib.pyplot as plt
 import pickle
 import Queue
@@ -86,7 +85,9 @@ class SibJoin:
         return SJGlobals.clusters.sortMaternalPaternal()
 
 if __name__ == '__main__':
-    sj = SibJoin("pkl", fn="../tests/big/2000_6_10_7.pkl")
+    if len(sys.argv) > 1:
+        sj = SibJoin("txt", sys.argv[1])
+    #sj = SibJoin("pkl", fn="../tests/big/2000_6_10_7.pkl")
     #sj = SibJoin("pkl", fn="../tests/indivs/200_6_6_7.pkl")
     #sj = SibJoin("pkl", fn="../tests/alleles/40_20_6_0.pkl")
     #sj = SibJoin("pkl", fn="../tests/loci/40_6_05_5.pkl")
