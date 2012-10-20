@@ -13,15 +13,17 @@ class SibJoinBuilder:
         SJGlobals.clear()
 
         # Load test file
+        named = False
         if filetype == "pkl":
             data = self.readPkl(fn)
         elif filetype == "txt":
             data = self.readText(fn)
+            named = True
         else:
             data = self.readPop(fn)
         
         SJGlobals.nLoci = data[0]
-        individuals = self.createIndvs(data[1])
+        individuals = self.createIndvs(data[1], named=named)
         candidateParents = data[2]
 
         nLoci = data[0]
@@ -131,18 +133,27 @@ class SibJoinBuilder:
         else:
             return d
 
-    def createIndvs(self, inds):
+    # The KINALYZER and COLONY formats accept names for each individual
+    # If this is the case, the first column is the name, set named=True
+    def createIndvs(self, inds, named=False):
         individuals = []
         nLoci = SJGlobals.nLoci
 
         for i in range(len(inds)):
-            ind = inds[i]
+            ind = []
+            name = ''
+            if named:
+                name = inds[i][0]
+                ind = inds[i][1:]
+            else:
+                ind = inds[i]
+                
             loci = []
 
             for j in range(nLoci):
-                loci.append([ind[2 * j], ind[2 * j + 1]])
+                loci.append([int(ind[2 * j]), int(ind[2 * j + 1]]))
 
-            individuals.append(Individual(-1, [-1, -1], i, loci))
+            individuals.append(Individual(-1, [-1, -1], i, loci), name=name)
 
         return individuals
 
@@ -166,13 +177,11 @@ class SibJoinBuilder:
     def readTxt(self, fn):
         f = open(fn, 'r')
         lines = f.readlines()
+        
+        individuals = [line.split(',') for line in lines]
+        nLoci = len(individuals[0]) / 2
 
-        nIndvs = int(lines[0])
-        nLoci = int(lines[1])
-        individuals = lines[2:nIndvs+3]
-        candidateParents = lines[nIndvs+3:]
-
-        return [nLoci, individuals, candidateParents]
+        return [nLoci, individuals, []]
     
     def setupResults(self):
         return self.d, self.threshold

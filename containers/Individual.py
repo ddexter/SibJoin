@@ -16,7 +16,8 @@ class Individual:
         all loci for each parent cluster.
         E.g. [[-1, -1], [-1, 2], [-1, -1]]
     '''
-    def __init__(self, fsCluster, hsClusters, index, loci):
+    def __init__(self, fsCluster, hsClusters, index, loci, name=''):
+        self.name = name
         self.fsCluster = fsCluster
         self.hsClusters = hsClusters
         self.index = index
