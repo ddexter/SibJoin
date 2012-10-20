@@ -80,8 +80,11 @@ class Cluster:
             # alleles)
             parents = [sorted(list(x))\
                 for x in itertools.combinations(alleleSet,2)]
+            parents.append([-1,-1])
             for i in alleleSet:
                 parents.append([i, i])
+                parents.append([i, -1])
+                parents.append([-1, i])
                 for j in otherAlleles:
                     parents.append(sorted([i, j]))
 
@@ -254,14 +257,4 @@ class Cluster:
             score += (float(locusScore) / float(len(self.allParents[l])))
 
         return score
-
-    def avgLinkageDissimilarity(self, cluster):
-        avg = 0.0
-        for ind0 in self.individuals:
-            for ind1 in cluster.individuals:
-                avg += ind0.alleleDissimilarity(ind1)
-        avg /= float(len(cluster.individuals) * len(self.individuals))
-
-        return avg
-
 

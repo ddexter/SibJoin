@@ -96,8 +96,10 @@ class JoinTests:
             
             alleles = set()
             for ind in candidateCluster:
-                alleles.add(ind.loci[l][0])
-                alleles.add(ind.loci[l][1])
+                if ind.loci[l][0] != -1:
+                    alleles.add(ind.loci[l][0])
+                if ind.loci[l][1] != -1:
+                    alleles.add(ind.loci[l][1])
 
             # All clusters with 2 or less alleles are valid FS
             if len(alleles) < 3:
@@ -119,20 +121,44 @@ class JoinTests:
                     parentsFound = True
                     for i in candidateCluster:
                         # (0,0)
-                        if (i.loci[l][0] == p0[0] and i.loci[l][1] == p1[0]) or\
-                            (i.loci[l][0] == p1[0] and i.loci[l][1] == p0[0]):
+                        if ((i.loci[l][0] == p0[0] or i.loci[l][0] == -1)\
+                            and\
+                            (i.loci[l][1] == p1[0] or i.loci[l][1] == -1))\
+                            or\
+                            ((i.loci[l][0] == p1[0] or i.loci[l][0] == -1)\
+                            and\
+                            (i.loci[l][1] == p0[0] or i.loci[l][1] == -1)):
+
                             continue
                         # (0,1)
-                        elif (i.loci[l][0] == p0[0] and i.loci[l][1] == p1[1]) or\
-                            (i.loci[l][0] == p1[1] and i.loci[l][1] == p0[0]):
+                        elif ((i.loci[l][0] == p0[0] or i.loci[l][0] == -1)\
+                            and\
+                            (i.loci[l][1] == p1[1] or i.loci[l][1] == -1))\
+                            or\
+                            ((i.loci[l][0] == p1[1] or i.loci[l][0] == -1)\
+                            and\
+                            (i.loci[l][1] == p0[0] or i.loci[l][1] == -1)):
+
                             continue
                         # (1,0)
-                        elif (i.loci[l][0] == p0[1] and i.loci[l][1] == p1[0]) or\
-                            (i.loci[l][0] == p1[0] and i.loci[l][1] == p0[1]):
+                        elif ((i.loci[l][0] == p0[1] or i.loci[l][0] == -1)\
+                            and\
+                            (i.loci[l][1] == p1[0] or i.loci[l][1] == -1))\
+                            or\
+                            ((i.loci[l][0] == p1[0] or i.loci[l][0] == -1)\
+                            and\
+                            (i.loci[l][1] == p0[1] or i.loci[l][1] == -1)):
+
                             continue
                         # (1,1)
-                        elif (i.loci[l][0] == p0[1] and i.loci[l][1] == p1[1]) or\
-                            (i.loci[l][0] == p1[1] and i.loci[l][1] == p0[1]):
+                        elif ((i.loci[l][0] == p0[1] or i.loci[l][0] == -1)\
+                            and\
+                            (i.loci[l][1] == p1[1] or i.loci[l][1] == -1))\
+                            or\
+                            ((i.loci[l][0] == p1[1] or i.loci[l][0] == -1)\
+                            and\
+                            (i.loci[l][1] == p0[1] or i.loci[l][1] == -1)):
+
                             continue
                         else:
                             parentsFound = False
