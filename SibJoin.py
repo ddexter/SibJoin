@@ -10,10 +10,8 @@ from containers.Cluster import Cluster
 from containers.Clusters import Clusters
 from containers.Individual import Individual
 from EvaluationToolkit import EvaluationToolkit
-from IPSolver import IPSolver
 from JoinTests import JoinTests
 from MinRemovals import MinRemovals
-from OriginalIP import OriginalIP
 from Population import Population
 from SibJoinBuilder import SibJoinBuilder
 from SJGlobals import SJGlobals

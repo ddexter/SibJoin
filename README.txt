@@ -14,6 +14,11 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 SibJoin architecture:
 The current deployment is written in Python and requires at least Python 2.7
 
+3rd Party Packages:
+    matplotlib
+    pickle
+    networkx
+
 Entry Point:
     SibJoin.py: Takes a file and calls SibJoinBuilder object to prepare
 	the algorithm.  The run function handles searching at different
