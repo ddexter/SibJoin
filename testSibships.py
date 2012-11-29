@@ -2,13 +2,11 @@ import matplotlib
 import math
 import os
 import pickle
-import evaluationTools
 import random
 import re
 import time
 
 from EvaluationToolkit import EvaluationToolkit
-from IPSolver import IPSolver
 from Population import Population
 from SibJoin import SibJoin
 
@@ -165,7 +163,6 @@ def computeOptFn(clusters, d):
         computeLogClustSize(clusters)]
 
 def test(fn, vi, verbose=False, outfile=''):
-
     vi = []
     time = []
 
@@ -270,7 +267,6 @@ def testCOLONY():
                     else:
                         cPos[ind][1] = i
 
-            eT = evaluationTools.EvaluationTools(pop)
             correct = eT.computeMaxMatchings(clusters)
             wrong = 2 * nIndvs - correct
             pdNorm = float(wrong) / float(2 * nIndvs)

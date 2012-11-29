@@ -20,10 +20,8 @@ class Clusters:
         allowableClusterJoins = SJGlobals.allowableClusterJoins
 
         clusters = self.hsClusters
-        jType = "hs"
         if fs:
             clusters = self.fsClusters
-            jType = "fs"
 
             # None of the individuals can be joined again.  They're already
             # full-sibs
@@ -70,11 +68,11 @@ class Clusters:
         '''
 
         aHS = []
-        addedClusters = [False] * len(clusters)
+        addedClusters = dict()
         numClusters = len(clusters)
         for i in clusters.keys():
             # Only process clusters which have not yet been assigned
-            if not addedClusters[i]:
+            if i not in addedClusters:
                 q = Queue.Queue()
                 tmp = [[],[]]
 
@@ -97,7 +95,7 @@ class Clusters:
 
                     # Add the cluster and mark as added
                     pMIdx = (cur[2] + 1) % 2
-                    if not addedClusters[j]:
+                    if j not in addedClusters:
                         tmp[pMIdx].append(copy.deepcopy(clusters[j]))
                         addedClusters[j] = True
                         

@@ -28,6 +28,17 @@ class SibJoin:
         self.stopTime = time.time()
         self.runTime = self.stopTime - self.startTime
 
+        print(fn)
+        individuals = self.builder.pop.individuals
+        tmpMHS, tmpPHS = SJGlobals.clusters.sortMaternalPaternal()
+        mHS = []
+        pHS = []
+        for cluster in tmpMHS:
+            mHS.append([ind.index for ind in cluster.individuals])
+        for cluster in tmpPHS:
+            pHS.append([ind.index for ind in cluster.individuals])
+        ipRes = MinRemovals(individuals, mHS, pHS)
+
     def run(self):
         allowable = SJGlobals.allowableJoins
         d = self.d
@@ -86,8 +97,8 @@ if __name__ == '__main__':
     if len(sys.argv) > 1:
         sj = SibJoin("txt", sys.argv[1])
     #sj = SibJoin("pkl", fn="../tests/big/2000_6_10_7.pkl")
-    #sj = SibJoin("pkl", fn="../tests/indivs/200_6_6_7.pkl")
-    #sj = SibJoin("pkl", fn="../tests/alleles/40_20_6_0.pkl")
-    #sj = SibJoin("pkl", fn="../tests/loci/40_6_05_5.pkl")
+    sj = SibJoin("pkl", fn="tests/indivs/100_6_6_3.pkl")
+    #sj = SibJoin("pkl", fn="tests/alleles/40_20_6_0.pkl")
+    #sj = SibJoin("pkl", fn="tests/loci/40_6_05_5.pkl")
     #sj = SibJoin("pkl", fn="../tests/indivs/010_6_6_5.pkl")
 
