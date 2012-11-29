@@ -11,8 +11,6 @@ from containers.Clusters import Clusters
 from containers.Individual import Individual
 from EvaluationToolkit import EvaluationToolkit
 from JoinTests import JoinTests
-from MinRemovals import MinRemovals
-from MaxPop import MaxPop
 from Population import Population
 from SibJoinBuilder import SibJoinBuilder
 from SJGlobals import SJGlobals
@@ -28,10 +26,6 @@ class SibJoin:
 
         self.stopTime = time.time()
         self.runTime = self.stopTime - self.startTime
-
-        individuals = self.builder.pop.individuals
-        mHS, pHS = self.getClusteringsLegacy()
-        ipRes = MinRemovals(individuals, mHS, pHS)
 
     def run(self):
         allowable = SJGlobals.allowableJoins
