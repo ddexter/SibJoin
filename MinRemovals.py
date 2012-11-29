@@ -142,7 +142,7 @@ class MinRemovals:
         variables = self.ip.solution.get_values(0, nIndvs-1)
 
         totalRemoved = 0
-        for i in range(len(variables)):
+        for i in range(nIndvs):
             if variables[i] > 0.5:
                 totalRemoved += 1
                 print names[i], variables[i]

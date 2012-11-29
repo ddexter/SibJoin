@@ -12,6 +12,7 @@ from containers.Individual import Individual
 from EvaluationToolkit import EvaluationToolkit
 from JoinTests import JoinTests
 from MinRemovals import MinRemovals
+from MaxPop import MaxPop
 from Population import Population
 from SibJoinBuilder import SibJoinBuilder
 from SJGlobals import SJGlobals
@@ -28,15 +29,8 @@ class SibJoin:
         self.stopTime = time.time()
         self.runTime = self.stopTime - self.startTime
 
-        print(fn)
         individuals = self.builder.pop.individuals
-        tmpMHS, tmpPHS = SJGlobals.clusters.sortMaternalPaternal()
-        mHS = []
-        pHS = []
-        for cluster in tmpMHS:
-            mHS.append([ind.index for ind in cluster.individuals])
-        for cluster in tmpPHS:
-            pHS.append([ind.index for ind in cluster.individuals])
+        mHS, pHS = self.getClusteringsLegacy()
         ipRes = MinRemovals(individuals, mHS, pHS)
 
     def run(self):
@@ -93,12 +87,33 @@ class SibJoin:
     def getClusterings(self):
         return SJGlobals.clusters.sortMaternalPaternal()
 
+    def getClusteringsLegacy(self):
+        tmpMHS, tmpPHS = SJGlobals.clusters.sortMaternalPaternal()
+        mHS = []
+        pHS = []
+        for cluster in tmpMHS:
+            mHS.append([ind.index for ind in cluster.individuals])
+        for cluster in tmpPHS:
+            pHS.append([ind.index for ind in cluster.individuals])
+
+        return mHS, pHS
+
+
 if __name__ == '__main__':
     if len(sys.argv) > 1:
         sj = SibJoin("txt", sys.argv[1])
     #sj = SibJoin("pkl", fn="../tests/big/2000_6_10_7.pkl")
-    sj = SibJoin("pkl", fn="tests/indivs/100_6_6_3.pkl")
+    #sj = SibJoin("pkl", fn="tests/indivs/100_6_6_3.pkl")
     #sj = SibJoin("pkl", fn="tests/alleles/40_20_6_0.pkl")
-    #sj = SibJoin("pkl", fn="tests/loci/40_6_05_5.pkl")
+    sj = SibJoin("pkl", fn="tests/loci/40_6_05_0.pkl")
+    sj = SibJoin("pkl", fn="tests/loci/40_6_05_1.pkl")
+    sj = SibJoin("pkl", fn="tests/loci/40_6_05_2.pkl")
+    sj = SibJoin("pkl", fn="tests/loci/40_6_05_3.pkl")
+    sj = SibJoin("pkl", fn="tests/loci/40_6_05_4.pkl")
+    sj = SibJoin("pkl", fn="tests/loci/40_6_05_5.pkl")
+    sj = SibJoin("pkl", fn="tests/loci/40_6_05_6.pkl")
+    sj = SibJoin("pkl", fn="tests/loci/40_6_05_7.pkl")
+    sj = SibJoin("pkl", fn="tests/loci/40_6_05_8.pkl")
+    sj = SibJoin("pkl", fn="tests/loci/40_6_05_9.pkl")
     #sj = SibJoin("pkl", fn="../tests/indivs/010_6_6_5.pkl")
 
