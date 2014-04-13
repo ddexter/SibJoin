@@ -95,19 +95,13 @@ class SibJoin:
 
 if __name__ == '__main__':
     if len(sys.argv) > 1:
-        sj = SibJoin("txt", sys.argv[1])
-    #sj = SibJoin("pkl", fn="../tests/big/2000_6_10_7.pkl")
-    #sj = SibJoin("pkl", fn="tests/indivs/100_6_6_3.pkl")
-    #sj = SibJoin("pkl", fn="tests/alleles/40_20_6_0.pkl")
-    sj = SibJoin("pkl", fn="tests/loci/40_6_05_0.pkl")
-    sj = SibJoin("pkl", fn="tests/loci/40_6_05_1.pkl")
-    sj = SibJoin("pkl", fn="tests/loci/40_6_05_2.pkl")
-    sj = SibJoin("pkl", fn="tests/loci/40_6_05_3.pkl")
-    sj = SibJoin("pkl", fn="tests/loci/40_6_05_4.pkl")
-    sj = SibJoin("pkl", fn="tests/loci/40_6_05_5.pkl")
-    sj = SibJoin("pkl", fn="tests/loci/40_6_05_6.pkl")
-    sj = SibJoin("pkl", fn="tests/loci/40_6_05_7.pkl")
-    sj = SibJoin("pkl", fn="tests/loci/40_6_05_8.pkl")
-    sj = SibJoin("pkl", fn="tests/loci/40_6_05_9.pkl")
-    #sj = SibJoin("pkl", fn="../tests/indivs/010_6_6_5.pkl")
+        sj = SibJoin("txt", fn=sys.argv[1])
+
+    clusterings = sj.getClusterings()
+    mHS, pHS = sj.getClusteringsLegacy()
+    for fam in mHS:
+        print sorted(fam)
+    print('\n\n')
+    for fam in pHS:
+        print sorted(fam)
 
